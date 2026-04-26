@@ -1,0 +1,87 @@
+Panels:
+  - Class: rviz_common/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /RobotModel1
+        - /TF1
+      Splitter Ratio: 0.5
+  - Class: rviz_common/Views
+    Help Height: 78
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 160; 160; 160
+      Enabled: true
+      Name: Grid
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Name: TF
+      Show Arrows: true
+      Show Names: true
+    - Class: rviz_default_plugins/RobotModel
+      Enabled: true
+      Name: RobotModel
+      Visual Enabled: true
+      Collision Enabled: false
+    - Class: rviz_default_plugins/LaserScan
+      Enabled: true
+      Name: LaserScan
+      Topic:
+        Value: /scan
+      Color: 255; 255; 0
+      Size (Pixels): 3
+      Style: Points
+      Use Fixed Frame: true
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Name: CameraImage
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Normalize Range: true
+      Topic:
+        Value: /depth_camera/image_raw
+    - Class: rviz_default_plugins/PointCloud2
+      Enabled: true
+      Name: DepthPoints
+      Topic:
+        Value: /depth_camera/points
+      Queue Size: 10
+      Size (Pixels): 2
+      Style: Flat Squares
+      Color Transformer: Intensity
+      Decay Time: 0
+      Selectable: true
+      Use Fixed Frame: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 60
+      Enable Stereo Rendering: false
+      Focal Point:
+        X: -5
+        Y: 8
+        Z: 0.5
+      Pitch: 0.35
+      Yaw: 0.785
+    Saved: ~

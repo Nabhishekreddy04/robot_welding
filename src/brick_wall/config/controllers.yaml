@@ -1,0 +1,70 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+    use_sim_time: true            # ← MUST be here
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    gripper_controller:
+      type: joint_trajectory_controller/JointTrajectoryController 
+
+    diff_drive_controller:   # 🔥 ADD THIS
+      type: diff_drive_controller/DiffDriveController
+
+    
+arm_controller:
+  ros__parameters:
+    use_sim_time: true            # ← here too
+    joints:
+      - joint1
+      - joint2
+      - joint3
+      - joint4
+      - joint5
+      - joint6
+      
+      
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+
+gripper_controller:             # ← ADD separate controller for fingers
+  ros__parameters:
+    use_sim_time: true
+    joints:
+      - f_joint1
+      - f_joint2
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+
+joint_state_broadcaster:
+  ros__parameters:
+    use_sim_time: true
+
+diff_drive_controller:
+  ros__parameters:
+    use_sim_time: true
+
+    left_wheel_names: ["front_left_wheel", "rear_left_wheel"]
+    right_wheel_names: ["front_right_wheel", "rear_right_wheel"]
+
+    wheel_separation: 0.4
+    wheel_radius: 0.1
+
+    base_frame_id: base_link
+    odom_frame_id: odom
+
+    publish_rate: 50.0
+    publish_tf: true
+
+    cmd_vel_timeout: 0.5
+    use_stamped_vel: false

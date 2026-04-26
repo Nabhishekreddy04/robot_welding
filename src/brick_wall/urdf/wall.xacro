@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="brick_wall">
+
+  <!-- Properties -->
+  <xacro:property name="brick_length" value="12.0"/>
+  <xacro:property name="half_brick" value="${brick_length / 2}"/>
+  <xacro:property name="brick_width" value="3.0"/>
+  <xacro:property name="brick_height" value="0.05"/>
+  <xacro:property name="gap" value="0.003"/>
+  <xacro:property name="rows" value="5"/>
+  <xacro:property name="columns" value="5"/>
+  <xacro:property name="wall_length" value="${columns * step_x}"/>
+  <xacro:property name="wall_width" value="${rows * step_y}"/>
+
+  <xacro:property name="step_x" value="${brick_length + gap}"/>
+  <xacro:property name="step_y" value="${brick_width + gap}"/>
+
+  <gazebo>
+    <physics type="ode">
+    
+        <!-- Simulation accuracy -->
+        <max_step_size>0.001</max_step_size>
+        <real_time_update_rate>1000</real_time_update_rate>
+
+        <ode>
+          <solver>
+            <type>quick</type>
+            <iters>200</iters>
+          </solver>
+
+          <constraints>
+            <cfm>0.0</cfm>
+            <erp>0.2</erp>
+          </constraints>
+        </ode>
+
+    </physics>
+  </gazebo>
+
+  <!-- World Link -->
+  <link name="world"/>
+  
+
+  <!-- Brick Macro -->
+  <xacro:macro name="brick" params="name x y length">
+
+    <link name="${name}">
+      
+      <!-- Visual -->
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+
+          <xacro:if value="${length == brick_length}">
+            <mesh filename="package://brick_wall/meshes/Cen1.stl"
+                  scale="1 1 1"/>
+          </xacro:if>
+
+          <xacro:unless value="${length == brick_length}">
+            <mesh filename="package://brick_wall/meshes/Cen2.stl"
+                  scale="1 1 1"/>
+          </xacro:unless>
+
+        </geometry>
+
+        <material name="red">
+          <color rgba="1 0 0 1"/>
+        </material>
+      </visual>
+
+      <!-- Collision -->
+      <collision>
+        <origin xyz="0 0 ${brick_height/2}" rpy="0 0 0"/>
+        <geometry>
+            <box size="${length} ${brick_width} ${brick_height}"/>
+        </geometry>
+      </collision>
+
+      <!-- Inertia -->
+      <inertial>
+        <mass value="100"/>
+        <inertia ixx="100" ixy="0" ixz="0"
+                 iyy="100" iyz="0"
+                 izz="100"/>
+      </inertial>
+
+    </link>
+
+    <!-- Gazebo Properties -->
+    <gazebo reference="${name}">
+        <material>Gazebo/Red</material>
+
+        <!-- Balanced contact/friction for wheel motion on the platform -->
+        <mu1>0.8</mu1>
+        <mu2>0.8</mu2>
+        <kp>2000000.0</kp>
+        <kd>500.0</kd>
+        <minDepth>0.002</minDepth>
+        <maxVel>0.1</maxVel>
+
+        <self_collide>false</self_collide>
+        <static>true</static>
+        
+    </gazebo>
+    
+    <!-- Fixed Joint -->
+    <joint name="${name}_joint" type="fixed">
+      <parent link="world"/>
+      <child link="${name}"/>
+      <origin xyz="${x + length/2 - wall_length/2} ${y - wall_width/2} 0" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+
+  <!-- Generate Row -->
+  <xacro:macro name="generate_row" params="row col offset_x">
+    <xacro:if value="${col &lt; columns}">
+
+      <xacro:brick
+        name="brick_${row}_${col}"
+        x="${offset_x + col * step_x}"
+        y="${row * step_y}"
+        length="${brick_length}"/>
+
+      <xacro:generate_row
+        row="${row}"
+        col="${col + 1}"
+        offset_x="${offset_x}"/>
+
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- Generate Wall -->
+  <xacro:macro name="generate_wall" params="row">
+    <xacro:if value="${row &lt; rows}">
+
+      <!-- Even Row -->
+      <xacro:if value="${row % 2 == 0}">
+        <xacro:generate_row row="${row}" col="0" offset_x="0"/>
+
+        <xacro:brick
+          name="edge_half_end_${row}"
+          x="${columns * step_x}"
+          y="${row * step_y}"
+          length="${half_brick}"/>
+      </xacro:if>
+
+      <!-- Odd Row -->
+      <xacro:if value="${row % 2 == 1}">
+        <xacro:brick
+          name="edge_half_start_${row}"
+          x="0"
+          y="${row * step_y}"
+          length="${half_brick}"/>
+
+        <xacro:generate_row
+          row="${row}"
+          col="0"
+          offset_x="${half_brick + gap}"/>
+      </xacro:if>
+
+      <!-- Recursive Call -->
+      <xacro:generate_wall row="${row + 1}"/>
+
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- Start Wall Generation -->
+  <xacro:generate_wall row="0"/>
+
+</robot>

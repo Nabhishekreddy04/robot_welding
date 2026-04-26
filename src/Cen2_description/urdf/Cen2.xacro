@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<robot name="Cen2" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:include filename="$(find Cen2_description)/urdf/materials.xacro" />
+<xacro:include filename="$(find Cen2_description)/urdf/Cen2.ros2control" />
+<xacro:include filename="$(find Cen2_description)/urdf/Cen2.gazebo" />
+<link name="base_link">
+  <inertial>
+    <origin xyz="2.6653441919039912e-15 -1.6658401199399945e-16 0.01247037675140422" rpy="0 0 0"/>
+    <mass value="3510.964646952963"/>
+    <inertia ixx="2612.082169" iyy="10490.365422" izz="13102.081899" ixy="-0.0" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find Cen2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find Cen2_description)/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+</robot>

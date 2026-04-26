@@ -1,0 +1,28 @@
+# ROS2 workspace build artifacts
+build/
+install/
+log/
+
+# Local build artifacts inside src (if any)
+src/build/
+src/install/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+
+# Generated files
+*.gv
+*.pdf
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
