@@ -3,7 +3,9 @@ download all the requirements and libraries
 
 terminal 1:
 cd ws
+
 colcon build
+
 source install/setup.py
 
 ros2 launch brick_wall display.launch.py enable_gap_detector:=true
@@ -11,10 +13,12 @@ ros2 launch brick_wall display.launch.py enable_gap_detector:=true
 
 terminal 2:
 cd ws
+
 ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 map odom
 
 terminal 3:
 cd ws
+
 ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 world map
 
 now open rviz :
