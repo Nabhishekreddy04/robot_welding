@@ -20,6 +20,7 @@ class JointStateGuiBridge(Node):
         ]
 
         self.last_positions: Dict[str, float] = {name: 0.0 for name in self.arm_joints}
+        self.publish_epsilon = 1e-4
 
         self.sub = self.create_subscription(
             JointState,
@@ -41,13 +42,17 @@ class JointStateGuiBridge(Node):
         if not msg.name or not msg.position:
             return
 
-        any_update = False
+        changed = False
         for idx, name in enumerate(msg.name):
             if name in self.last_positions and idx < len(msg.position):
-                self.last_positions[name] = float(msg.position[idx])
-                any_update = True
+                new_pos = float(msg.position[idx])
+                if abs(new_pos - self.last_positions[name]) > self.publish_epsilon:
+                    self.last_positions[name] = new_pos
+                    changed = True
 
-        if not any_update:
+        # Avoid spamming the controller with identical GUI values,
+        # which can override autonomous arm commands.
+        if not changed:
             return
 
         traj = JointTrajectory()

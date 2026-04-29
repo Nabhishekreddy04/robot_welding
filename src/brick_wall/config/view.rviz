@@ -35,6 +35,7 @@ Visualization Manager:
       Name: LaserScan
       Topic:
         Value: /scan
+      Queue Size: 30
       Color: 255; 255; 0
       Size (Pixels): 3
       Style: Points
@@ -53,7 +54,7 @@ Visualization Manager:
       Name: DepthPoints
       Topic:
         Value: /depth_camera/points
-      Queue Size: 10
+      Queue Size: 30
       Size (Pixels): 2
       Style: Flat Squares
       Color Transformer: Intensity
@@ -63,7 +64,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: world
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:

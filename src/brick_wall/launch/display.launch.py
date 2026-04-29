@@ -258,11 +258,20 @@ def generate_launch_description():
         output="screen",
     )
 
+    # Bridge simulation world and robot odometry trees for RViz fixed-frame transforms.
+    world_to_odom_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        arguments=["0", "0", "0", "0", "0", "0", "world", "odom"],
+        condition=IfCondition(use_sim),
+        output="screen",
+    )
+
     # ================= FINAL =================
     return LaunchDescription(
         [
             DeclareLaunchArgument("use_sim", default_value="true"),
-            DeclareLaunchArgument("enable_joint_state_gui", default_value="true"),
+            DeclareLaunchArgument("enable_joint_state_gui", default_value="false"),
             DeclareLaunchArgument("enable_gap_detector", default_value="true"),
             DeclareLaunchArgument("enable_twist_mux", default_value="true"),
             DeclareLaunchArgument("stop_on_gap", default_value="false"),
@@ -272,6 +281,7 @@ def generate_launch_description():
             gazebo,
             wall_state_publisher,
             robot_state_publisher,
+            world_to_odom_tf,
             # RVIZ runs in simulation mode with the configured fixed frame
             joint_state_gui_non_sim,
             TimerAction(

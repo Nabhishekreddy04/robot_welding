@@ -29,6 +29,7 @@ setup(
             "joint_state_gui_bridge = brick_wall.joint_state_gui_bridge:main",
             "gap_detector = brick_wall.gap_detector:main",
             "auto_navigator = brick_wall.auto_navigator:main",
+            'welding_coordinator = brick_wall.welding_coordinator:main',
         ],
     },
 )

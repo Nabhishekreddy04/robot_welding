@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: brick_wall
+    relative_path: urdf/four_wheel_robot.xacro
+  srdf:
+    relative_path: config/mobile_manipulator.srdf
+  package_settings:
+    author_name: abhishek
+    author_email: r5eddynabhishek@gmail.com
+    generated_timestamp: 1777263159

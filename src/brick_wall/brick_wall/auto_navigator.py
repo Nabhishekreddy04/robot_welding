@@ -7,6 +7,8 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from std_msgs.msg import String
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy
 
 
 class AutoNavigator(Node):
@@ -21,6 +23,17 @@ class AutoNavigator(Node):
 
         self.create_subscription(Odometry, "/odom", self._on_odom, 10)
         self.vel_pub = self.create_publisher(Twist, "/cmd_vel", 10)
+        trigger_qos = QoSProfile(
+            depth=10,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+            reliability=QoSReliabilityPolicy.RELIABLE,
+        )
+        self.trigger_pub = self.create_publisher(
+            String, "/navigator/position_trigger", trigger_qos
+        )
+
+        self._triggered_labels = set()
+        self._trigger_tolerance = 0.7
 
         self.timer = self.create_timer(0.5, self._check_ready)
 
@@ -37,13 +50,51 @@ class AutoNavigator(Node):
         self.yaw = math.atan2(siny, cosy)
 
         self.odom_ready = True
+        self._publish_position_triggers()
+
+    def _publish_position_triggers(self):
+        # Publish each trigger point once per run to avoid retrigger spam.
+        self._maybe_publish_trigger("minus_30_3", -30.0, 3.0)
+        self._maybe_publish_trigger("plus_30_3", 30.0, 3.0)
+        self._maybe_publish_trigger("plus_30_m2_8", 30.0, -2.8)
+        self._maybe_publish_trigger("minus_30_m2_8", -30.0, -2.8)
+
+    def _maybe_publish_trigger(self, label, tx, ty):
+        if label in self._triggered_labels:
+            return
+
+        if abs(self.x - tx) > self._trigger_tolerance:
+            return
+        if abs(self.y - ty) > self._trigger_tolerance:
+            return
+
+        direction = self._current_direction()
+        msg = String()
+        msg.data = f"label={label};x={self.x:.2f};y={self.y:.2f};dir={direction}"
+        self.trigger_pub.publish(msg)
+        self._triggered_labels.add(label)
+        self.get_logger().info(f"Published trigger: {msg.data}")
+
+    def _current_direction(self):
+        yaw_deg = math.degrees(self.yaw)
+        # Normalize to [-180, 180]
+        while yaw_deg > 180.0:
+            yaw_deg -= 360.0
+        while yaw_deg < -180.0:
+            yaw_deg += 360.0
+
+        if -45.0 <= yaw_deg <= 45.0:
+            return "east"
+        if yaw_deg >= 135.0 or yaw_deg <= -135.0:
+            return "west"
+        if 45.0 < yaw_deg < 135.0:
+            return "north"
+        return "south"
 
     def _check_ready(self):
         if self.odom_ready:
             self.timer.cancel()
-            self.get_logger().info(
-                f"Start at ({self.x:.2f}, {self.y:.2f})"
-            )
+            self.get_logger().info(f"Start at ({self.x:.2f}, {self.y:.2f})")
             threading.Thread(target=self._run, daemon=True).start()
 
     # ───────────── MISSION ─────────────
@@ -59,39 +110,18 @@ class AutoNavigator(Node):
         self._turn_to(-math.pi / 2)
 
         # 3️⃣ MOVE SOUTH (X = 35 fixed)
-        self._drive_straight_y(target_x=35.0, target_y=-3.0)
+        self._drive_straight_y(target_x=35.0, target_y=-2.80)
 
         # 4️⃣ TURN WEST
         self._turn_to(math.pi)
         time.sleep(1.0)
-        self._align_y(-3.0)
+        # self._align_y(-3.0)
 
         # 5️⃣ MOVE WEST (Y = -3 fixed)
-        self._drive_straight_x(target_x=-35.0, target_y=-3.0)
+        self._drive_straight_x(target_x=-35.0, target_y=-2.80)
 
         self.get_logger().info("=== DONE ===")
         self._stop()
-
-    def _align_y(self, target_y):
-        self.get_logger().info(f"Aligning to Y={target_y}")
-
-        while rclpy.ok():
-            error = target_y - self.y
-
-            if abs(error) < 0.05:
-                break
-
-            t = Twist()
-
-            # move slowly forward while correcting
-            t.linear.x = 0.1
-            t.angular.z = -3.0 * error
-
-            self.vel_pub.publish(t)
-            time.sleep(0.05)
-
-        self._stop()
-        time.sleep(0.5)
 
     # ───────────── STRAIGHT MOTION ─────────────
 
