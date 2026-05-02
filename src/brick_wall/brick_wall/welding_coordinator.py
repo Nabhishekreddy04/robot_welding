@@ -28,7 +28,11 @@ class WeldingCoordinator(Node):
             "home": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         }
         self.joints = ["joint1", "joint2", "joint3", "joint4", "joint5", "joint6"]
+        # Track handled triggers together with the last 'manip' value processed
+        # so that the same label can be reprocessed if its requested
+        # manipulator target changes (e.g., first `home` then `pose1`).
         self.handled_triggers = set()
+        self.handled_payloads = {}
         self.server_ready = False
         self.warned_movegroup_fallback = False
         self.pending_direct_pose = None
@@ -136,13 +140,18 @@ class WeldingCoordinator(Node):
             self.get_logger().warn(f"Ignored malformed trigger: {msg.data}")
             return
 
-        if label in self.handled_triggers:
+        # If we've already handled this exact manip request for the label,
+        # ignore duplicates. Otherwise allow reprocessing when `manip`
+        # changes (common for bottom-row entry: first 'home', then 'pose1').
+        current_manip = data.get("manip")
+        last_manip = self.handled_payloads.get(label)
+        if last_manip is not None and current_manip == last_manip:
             return
 
         if label == "plus_30_3":
             # At (30, 3), always move manipulator to home.
             self.send_arm_pose("home")
-            self.handled_triggers.add(label)
+            self.handled_payloads[label] = current_manip
             return
 
         if label == "minus_30_3":
@@ -151,16 +160,33 @@ class WeldingCoordinator(Node):
                 self.send_arm_pose("pose1")
             else:
                 self.send_arm_pose("home")
-            self.handled_triggers.add(label)
+            self.handled_payloads[label] = current_manip
             return
 
-        if label in ("plus_30_m2_8", "minus_30_m2_8"):
-            # Bottom row trigger: east/west -> pose1, north/south -> home.
-            if direction in ("east", "west"):
+        # Bottom row handling: when entering the westward leg from the east edge
+        # (`plus_30_m2_8`) we want the arm to move to `pose1` and stay there
+        # while traversing west. When the robot reaches the far-west edge
+        # (`minus_30_m2_8`) we want it to return to `home`.
+        if label == "plus_30_m2_8":
+            # Only transition to pose1 when the vehicle is turning west.
+            if direction == "west":
                 self.send_arm_pose("pose1")
             else:
                 self.send_arm_pose("home")
-            self.handled_triggers.add(label)
+            self.handled_payloads[label] = current_manip
+            return
+
+        if label == "minus_30_m2_8":
+            # At far-west end: return arm to home regardless of previous direction.
+            self.send_arm_pose("home")
+            self.handled_payloads[label] = current_manip
+            return
+
+        # Short-lived helper trigger published by the navigator when it begins
+        # the westward leg; accept it and move to pose1 immediately.
+        if label == "enter_west":
+            self.send_arm_pose("pose1")
+            self.handled_payloads[label] = current_manip
             return
 
         self.get_logger().info(f"Unhandled trigger label: {label}")

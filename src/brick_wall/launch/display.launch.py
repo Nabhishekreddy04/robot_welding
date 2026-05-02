@@ -26,7 +26,13 @@ def generate_launch_description():
 
     # ================= XACRO =================
     wall_xacro = os.path.join(pkg_path, "urdf", "wall.xacro")
-    wall_description = xacro.process_file(wall_xacro).toxml()
+    wall_description_raw = xacro.process_file(wall_xacro).toxml()
+
+    # Convert package:// URIs to absolute paths so Gazebo can resolve them
+    meshes_path = os.path.join(pkg_path, "meshes")
+    wall_description = wall_description_raw.replace(
+        "package://brick_wall/meshes/", f"file://{meshes_path}/"
+    )
 
     robot_xacro = os.path.join(pkg_path, "urdf", "four_wheel_robot.xacro")
     robot_description = ParameterValue(Command(["xacro ", robot_xacro]), value_type=str)

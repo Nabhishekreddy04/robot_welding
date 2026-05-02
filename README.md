@@ -28,11 +28,24 @@ now open rviz :
        next again add robot model amd select description topic as /gap_type
 
 terminal 4 :
+ros2 run brick_wall weld_coordinator
+
+terminal 4 :
 
 ros2 run brick_wall auto_navigator
 
 
 now u can see robot moving
+
+FOR GRAPH :
+
+# If not already sourced:
+source /opt/ros/<distro>/setup.bash
+# From workspace root (optional):
+# source install/setup.bash
+
+# Run the plotter directly:
+python3 src/brick_wall/brick_wall/odom_plotter.py
 
 
 
